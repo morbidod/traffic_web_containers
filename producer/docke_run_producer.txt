@@ -1,0 +1,1 @@
+docker run -d  --name producer-container -v ${PWD}/data:/data/ python-producer

@@ -1,0 +1,1 @@
+ docker run -d --name consumer-run -v ${PWD}/data:/app/data -v ${PWD}/output:/app/output python-consumer

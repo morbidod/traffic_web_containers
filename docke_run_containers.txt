@@ -1,0 +1,8 @@
+docker run -d  --name producer-container -v ${PWD}/data:/data/ python-producer
+
+docker run -d --name consumer-run -v ${PWD}/data:/app/data -v ${PWD}/output:/app/output python-consumer
+
+docker run -d --name web-server -p 8080:80 `
+  -v ${PWD}/nginx/static-html-directory:/usr/share/nginx/html `
+  -v ${PWD}/output:/usr/share/nginx/html/grafici `
+   myngnix

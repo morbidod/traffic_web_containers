@@ -1,0 +1,4 @@
+ docker run -d --name web-server -p 8080:80 `
+  -v ${PWD}/nginx/static-html-directory:/usr/share/nginx/html `
+  -v ${PWD}/output:/usr/share/nginx/html/grafici `
+   myngnix

@@ -1,0 +1,7 @@
+# Ignora i dati generati dai container
+data/*
+output/*
+
+# Ignora file di sistema
+.DS_Store
+Thumbs.db

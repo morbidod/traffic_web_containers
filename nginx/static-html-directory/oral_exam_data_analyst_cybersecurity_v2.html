@@ -1,0 +1,161 @@
+
+<div style="padding:1.5rem 0;font-family:var(--font-sans)">
+<h2 class="sr-only">Simulatore domande orale Data Analyst Cybersecurity</h2>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:1rem;border-bottom:0.5px solid var(--color-border-tertiary)">
+  <div>
+    <div style="font-size:17px;font-weight:500;color:var(--color-text-primary)">Simulazione orale — Data Analyst per Cybersecurity</div>
+    <div style="font-size:13px;color:var(--color-text-secondary);margin-top:3px">Clicca su una domanda per vedere i punti chiave attesi dalla commissione</div>
+  </div>
+  <span style="font-size:12px;padding:3px 10px;border-radius:8px;background:var(--color-background-info);color:var(--color-text-info);font-weight:500">Concorso pubblico</span>
+</div>
+
+<div id="tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem"></div>
+<div id="qlist"></div>
+</div>
+
+<script>
+var questions = {
+  "Python & Librerie": [
+    {
+      q: "Qual è la differenza tra un DataFrame di pandas e un array NumPy? Quando useresti l'uno o l'altro?",
+      diff: "base",
+      hint: "DataFrame: struttura tabulare con indici e tipi eterogenei per colonna, ideale per dati strutturati e ETL. NumPy array: omogeneo, ottimizzato per calcolo matriciale e operazioni vettorializzate. In cybersecurity: NumPy per matrici di feature nei modelli ML, pandas per parsing log e correlazione eventi."
+    },
+    {
+      q: "Come gestiresti dati mancanti (NaN) in un dataset di log di sicurezza con pandas?",
+      diff: "base",
+      hint: "dropna() vs fillna() vs interpolate(). In security: NaN in un campo IP può indicare traffico interno (fillna('internal')) o corruzione del dato (flag separato). Attenzione: imputare NaN in feature critiche può introdurre bias nei modelli IDS."
+    },
+    {
+      q: "Descrivi la pipeline tipica con scikit-learn: dai dati grezzi al modello addestrato.",
+      diff: "medio",
+      hint: "1) Preprocessing: StandardScaler/MinMaxScaler, encoding categorici (LabelEncoder, OneHotEncoder). 2) Oggetto Pipeline per concatenare trasformazioni. 3) Train/test split, cross-validation con StratifiedKFold (utile per classi sbilanciate come gli alert). 4) fit() / predict() / evaluate() con metriche appropriate (F1, ROC-AUC)."
+    },
+    {
+      q: "In un contesto di anomaly detection su traffico di rete, quale algoritmo di scikit-learn utilizzeresti e perché?",
+      diff: "avanzato",
+      hint: "IsolationForest: non supervisionato, efficiente su alta dimensionalità, robusto agli outlier. Alternativa: LocalOutlierFactor. Parametro chiave: contamination (% anomalie attese). In cybersecurity: collegare gli anomaly score a regole SIEM e discutere il problema del dataset sbilanciato (precision vs recall trade-off)."
+    }
+  ],
+  "SQL & Database": [
+    {
+      q: "Qual è la differenza tra INNER JOIN, LEFT JOIN e FULL OUTER JOIN? Fai un esempio pratico in ambito security.",
+      diff: "base",
+      hint: "INNER: solo righe con match in entrambe le tabelle. LEFT: tutti i record della tabella sinistra + match destra (NULL se assente). FULL OUTER: tutti i record da entrambe. Esempio security: LEFT JOIN tra utenti e accessi → utenti che non hanno mai effettuato login (potenziali account fantasma o inattivi)."
+    },
+    {
+      q: "Cosa sono le window functions in SQL? Portane un esempio applicato all'analisi di log.",
+      diff: "medio",
+      hint: "Funzioni aggregate che operano su una finestra di righe senza collassare il risultato (non come GROUP BY). Esempi: ROW_NUMBER(), LAG(), LEAD(), SUM() OVER(PARTITION BY). Caso security: LAG(timestamp) OVER (PARTITION BY user_id ORDER BY timestamp) per calcolare il tempo tra eventi consecutivi → rilevare brute force o sessioni anomale."
+    },
+    {
+      q: "Quando preferiresti un database NoSQL a uno relazionale in un sistema SIEM?",
+      diff: "medio",
+      hint: "NoSQL: alta velocità di scrittura, schema flessibile, scalabilità orizzontale. Elasticsearch (document-based) ideale per full-text search e aggregazioni real-time sui log. MongoDB per log con struttura variabile. RDBMS preferibile per correlazioni strutturate e query ad hoc complesse. Architettura ibrida comune: ingestione NoSQL + warehouse relazionale per reporting."
+    },
+    {
+      q: "Come ottimizzeresti una query SQL lenta su una tabella con miliardi di log di accesso?",
+      diff: "avanzato",
+      hint: "1) EXPLAIN / EXPLAIN ANALYZE per leggere il query plan. 2) Indici su colonne filtrate frequentemente (timestamp, user_id, IP sorgente). 3) Partitioning per data (range partition). 4) Evitare SELECT *. 5) Materializzare viste aggregate. 6) Valutare columnar storage (BigQuery, Redshift, ClickHouse) per carichi analitici."
+    }
+  ],
+  "ETL & Pipeline": [
+    {
+      q: "Cosa si intende per ETL e come si distingue da ELT? Quale approccio è più comune nel cloud?",
+      diff: "base",
+      hint: "ETL: Extract→Transform→Load (trasformazione prima del caricamento, tipico on-premise). ELT: Extract→Load→Transform (dati raw nel data lake, trasformazione successiva con potenza cloud). Nel cloud (BigQuery, Snowflake, Redshift) ELT è predominante per scalabilità e flessibilità. In cybersecurity: raw logs → data lake → normalizzazione con dbt o Spark."
+    },
+    {
+      q: "Quali strumenti utilizzeresti per costruire una pipeline di ingestione di log da sorgenti eterogenee (firewall, endpoint, cloud)?",
+      diff: "medio",
+      hint: "Logstash/Fluentd per raccolta e parsing, Kafka come message broker per alta throughput e disaccoppiamento, Apache Spark o Flink per stream processing. Formati comuni: Syslog, CEF, JSON, XML. Normalizzazione verso schema comune (es. ECS - Elastic Common Schema). Filebeat come agente leggero lato sorgente."
+    },
+    {
+      q: "Come gestiresti la qualità del dato in una pipeline di sicurezza automatizzata?",
+      diff: "medio",
+      hint: "Validazione schema in ingresso (Great Expectations, dbt tests), deduplicazione tramite hash degli eventi, normalizzazione dei timestamp (timezone, clock skew), dead letter queue per eventi malformati, monitoraggio del volume ingestito (drop improvviso = possibile blind spot nel rilevamento)."
+    },
+    {
+      q: "Descrivi come automatizzeresti un workflow di analisi settimanale degli alert di sicurezza.",
+      diff: "avanzato",
+      hint: "Orchestratore: Apache Airflow (DAG con scheduling) o Prefect. Step tipici: 1) Extract da SIEM/DB. 2) Transform con pandas/Spark. 3) Scoring anomalie con modello ML. 4) Generazione report (PDF/Excel). 5) Push su dashboard BI. 6) Notifica via email o Slack. Gestione errori: retry automatici, alerting su failure, idempotenza dei task."
+    }
+  ],
+  "BI & Dashboard": [
+    {
+      q: "Qual è la differenza tra Power BI, Tableau e Grafana? In quale contesto sceglieresti ciascuno?",
+      diff: "base",
+      hint: "Power BI: ecosistema Microsoft, ottimo per dati aziendali strutturati, integrazione Office 365. Tableau: potenza visiva e drill-down avanzato, ideale per analisi esplorative. Grafana: open source, ottimizzato per time-series e metriche infrastrutturali, integra Prometheus/Elasticsearch. In cybersecurity: Grafana per SOC real-time, Power BI per report direzionali periodici."
+    },
+    {
+      q: "Cosa sono le misure e le dimensioni in un modello dati per BI? Come le applicheresti a dati di sicurezza?",
+      diff: "base",
+      hint: "Dimensioni: attributi descrittivi (utente, IP, paese, tipo evento). Misure: valori numerici aggregabili (count alert, bytes trasferiti, durata sessione). Schema a stella: fact table (eventi) + dimension tables. In security: fact_alert con dim_user, dim_host, dim_threat_category. La granularità della fact table corrisponde a un singolo evento."
+    },
+    {
+      q: "Come progetteresti una dashboard SOC per monitorare in tempo reale gli alert di sicurezza?",
+      diff: "medio",
+      hint: "KPI principali: alert per severità (critical/high/medium/low), MTTD (Mean Time to Detect), MTTR, top 10 IP sorgenti, trend temporale. Drill-down: click su alert → dettaglio evento. Refresh automatico ogni 30-60 secondi. Filtri: timerange, asset, severity. Colori semantici coerenti. Strumento consigliato: Grafana + Elasticsearch o Power BI in DirectQuery mode."
+    },
+    {
+      q: "Cosa è il 'data refresh' in Power BI e quali sono le sue limitazioni in uno scenario di sicurezza real-time?",
+      diff: "avanzato",
+      hint: "Import mode: dati caricati in memoria, refresh schedulato (max 8/giorno in Pro, 48 in Premium) — inadeguato per il real-time. DirectQuery: query live al DB senza cache, ma con latenza maggiore e carico sul DB. Composite model: mix dei due. In security real-time conviene usare Grafana/Kibana per il monitoraggio live e Power BI solo per il reporting periodico."
+    }
+  ]
+};
+
+var categories = Object.keys(questions);
+var activeTab = categories[0];
+var openIndex = -1;
+
+function diffBadge(d) {
+  var colors = {
+    "base": "background:#EAF3DE;color:#3B6D11",
+    "medio": "background:#FAEEDA;color:#854F0B",
+    "avanzato": "background:#FAECE7;color:#993C1D"
+  };
+  return '<span style="display:inline-block;font-size:11px;padding:2px 8px;border-radius:100px;margin-left:8px;font-weight:500;vertical-align:middle;'+colors[d]+'">'+d+'</span>';
+}
+
+function renderTabs() {
+  var el = document.getElementById('tabs');
+  el.innerHTML = categories.map(function(c) {
+    var isActive = c === activeTab;
+    var style = isActive
+      ? 'background:var(--color-background-info);color:var(--color-text-info);border-color:transparent;font-weight:500'
+      : 'background:transparent;color:var(--color-text-secondary)';
+    return '<button onclick="setTab(\''+c+'\')" style="font-size:13px;padding:5px 12px;border-radius:8px;border:0.5px solid var(--color-border-secondary);cursor:pointer;'+style+'">'+c+'</button>';
+  }).join('');
+}
+
+function renderQuestions() {
+  var qs = questions[activeTab];
+  var el = document.getElementById('qlist');
+  el.innerHTML = qs.map(function(item, i) {
+    var isOpen = openIndex === i;
+    var borderColor = isOpen ? 'var(--color-border-info)' : 'var(--color-border-tertiary)';
+    var chevron = isOpen ? 'transform:rotate(180deg)' : '';
+    var hintDisplay = isOpen ? 'block' : 'none';
+    return '<div style="background:var(--color-background-primary);border:0.5px solid '+borderColor+';border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px;cursor:pointer" onclick="toggleQ('+i+')">'
+      + '<div style="display:flex;align-items:flex-start;gap:10px">'
+      + '<span style="font-size:12px;font-weight:500;color:var(--color-text-info);background:var(--color-background-info);border-radius:4px;padding:2px 7px;white-space:nowrap;flex-shrink:0;margin-top:2px">Q'+(i+1)+'</span>'
+      + '<span style="font-size:15px;color:var(--color-text-primary);line-height:1.5;flex:1">'+item.q+diffBadge(item.diff)+'</span>'
+      + '<span style="color:var(--color-text-tertiary);font-size:18px;flex-shrink:0;transition:transform 0.2s;display:inline-block;'+chevron+'">⌄</span>'
+      + '</div>'
+      + '<div style="display:'+hintDisplay+';margin-top:0.75rem;padding-top:0.75rem;border-top:0.5px solid var(--color-border-tertiary)">'
+      + '<div style="font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Punti attesi dalla commissione</div>'
+      + '<div style="font-size:13.5px;color:var(--color-text-secondary);line-height:1.65">'+item.hint+'</div>'
+      + '<button onclick="event.stopPropagation();sendPrompt(\'Simulazione orale: rispondimi come se fossi un candidato a questa domanda: '+item.q.replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\')" style="margin-top:10px;padding:6px 14px;font-size:13px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-primary);cursor:pointer">Rispondi come candidato ↗</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function setTab(cat) { activeTab = cat; openIndex = -1; renderTabs(); renderQuestions(); }
+function toggleQ(i) { openIndex = openIndex === i ? -1 : i; renderQuestions(); }
+
+renderTabs();
+renderQuestions();
+</script>
